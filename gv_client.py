@@ -49,7 +49,7 @@ class TooManyFailuresError(Exception):
     def __str__(self):
         return "Too many failures (%d) fetching url: %s" % (self.num, self.url)
 
-class GoogleVoice():
+class GoogleVoice(object):
     # CONFIGURATION
     try_clientlogin = False
     try_servicelogin = True
@@ -140,20 +140,23 @@ class GoogleVoice():
                 request.add_header('Cookie',
                     '%s=%s' % (name,val))
                         
-        # NOTE: This may throw an error, but it's best to catch it outside of here.
-        response = self.opener.open(request)            
-        
         max_tries = 5 # TODO: make this a constant or config option
         tries = 0
         
         data = None
+        response = None
         
         while not data and (tries < max_tries):
             try:
+                if not response: response = self.opener.open(request)
                 data = response.read()
             except httplib.IncompleteRead:
                 tries = tries + 1
                 data = None
+            except httplib.BadStatusLine as err:
+                tries = tries + 1
+                response = None
+                print('[Warning] Caught BadStatusLine: %s' % err)
                 
         if data:
             return data
@@ -195,7 +198,7 @@ class GoogleVoice():
     def get_unread_msgs_count(self):
         return self.get_unread_counts()["all"]
         
-class Feed():
+class Feed(object):
     def __init__(self, json_e, html_e):
         self.json = json.loads(json_e.firstChild.data)
 
@@ -243,7 +246,7 @@ class Feed():
 def xml_attr_match(elem, name, value):
     return name in elem.attributes.keys() and elem.attributes[name].value == value
     
-class Message():
+class Message(object):
     def __init__(self, msgid, content, htmldiv):
         self.id = msgid
         self.content = content
