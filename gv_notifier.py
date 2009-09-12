@@ -122,6 +122,10 @@ class Notifier():
     def make_notifications(self):
         unread = self.gv.get_unread_msgs()
         unread_cnt = len(unread)
+        
+        if unread_cnt != self.gv.get_unread_msgs_count():
+            print('[Warning] sanity check failed: unread_cnt != self.gv.get_unread_msgs_count()')
+        
         self.statusicon.set_tooltip("%d unread messages." % unread_cnt)
         self.statusicon.set_blinking(unread_cnt > 0) # TODO: change to a different icon instead!
         
